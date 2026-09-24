@@ -29,7 +29,7 @@ class MainActivity:ComponentActivity(){
  DisposableEffect(Unit){onDispose{tone.release()}}
  var points by remember{mutableIntStateOf(1000)};var bet by remember{mutableIntStateOf(20)}
  var deck by remember{mutableStateOf(engine.newDeck())};var cards by remember{mutableStateOf(emptyList<Card>())};var held by remember{mutableStateOf(setOf<Int>())}
- var drawing by remember{mutableStateOf(false)};var win by remember{mutableIntStateOf(0)};var hand by remember{mutableStateOf(Hand.NONE)};var shuffling by remember{mutableStateOf(false)};var ladderLight by remember{mutableIntStateOf(-1)};var riskAvailable by remember{mutableStateOf(false)}
+ var drawing by remember{mutableStateOf(false)};var win by remember{mutableIntStateOf(0)};var hand by remember{mutableStateOf(Hand.NONE)};var shuffling by remember{mutableStateOf(false)};var ladderLight by remember{mutableIntStateOf(-1)};var riskAvailable by remember{mutableStateOf(false)};var riskRunning by remember{mutableStateOf(false)}
  val amber=Color(0xFFFFB000)
  suspend fun dealAnimated(newDeck:MutableList<Card>){
   shuffling=true; cards=emptyList(); repeat(8){tone.startTone(ToneGenerator.TONE_PROP_BEEP,35);delay(45)}
@@ -44,7 +44,8 @@ class MainActivity:ComponentActivity(){
   }
   Row(Modifier.fillMaxWidth().height(105.dp),horizontalArrangement=Arrangement.SpaceEvenly,verticalAlignment=Alignment.CenterVertically){
    Led("PUNKTE",points);Led("EINSATZ",bet);Led("GEWINN",win)
-   MachineButton(if(riskAvailable)"NEHMEN" else "EINSATZ",Color.DarkGray,!drawing&&!shuffling){if(riskAvailable){points+=win;win=0;riskAvailable=false}else bet=bets[(bets.indexOf(bet)+1)%bets.size];tone.startTone(ToneGenerator.TONE_CDMA_PIP,45)}
+   MachineButton(if(riskAvailable)"NEHMEN" else "EINSATZ",Color.DarkGray,!drawing&&!shuffling&&!riskRunning){if(riskAvailable){points+=win;win=0;riskAvailable=false;ladderLight=-1}else bet=bets[(bets.indexOf(bet)+1)%bets.size];tone.startTone(ToneGenerator.TONE_CDMA_PIP,45)}
+   MachineButton("RISIKO",Color(0xFF7A1111),riskAvailable&&!riskRunning){scope.launch{riskRunning=true;val path=listOf(9,8,7,6,5,4,3,2,1,0,1,2,3,4,5,6,7,8,9);repeat(2){for(x in path){ladderLight=x;tone.startTone(ToneGenerator.TONE_CDMA_PIP,20);delay(42)}};val stop=(0..9).random();var p=9;while(p!=stop){p=if(p==0)9 else p-1;ladderLight=p;tone.startTone(ToneGenerator.TONE_CDMA_PIP,28);delay(70L+(9-p)*18L)};val values=listOf(5000,2000,1000,500,200,100,50,20,10,0);win=values[stop];riskAvailable=win>0;riskRunning=false}}
    val scope=rememberCoroutineScope()
    MachineButton(if(drawing)"ZIEHEN" else "GEBEN",Color(0xFF9E1717),!shuffling){
     scope.launch{
@@ -54,7 +55,7 @@ class MainActivity:ComponentActivity(){
      }else{
       val d=deck.toMutableList();var next=cards
       for(i in 0..4)if(i !in held){delay(90);next=next.toMutableList().also{it[i]=d.removeAt(0)};cards=next;tone.startTone(ToneGenerator.TONE_PROP_ACK,50)}
-      deck=d;hand=engine.evaluate(next);win=bet*hand.multiplier;points+=win;drawing=false
+      deck=d;hand=engine.evaluate(next);win=bet*hand.multiplier;drawing=false;riskAvailable=win>0
       tone.startTone(if(win>0)ToneGenerator.TONE_PROP_ACK else ToneGenerator.TONE_PROP_NACK,180)
      }
     }
