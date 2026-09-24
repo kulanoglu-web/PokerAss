@@ -25,21 +25,21 @@ class MainActivity:ComponentActivity(){
  override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState);setContent{PokerAssScreen()}}
 }
 @Composable fun PokerAssScreen(){
- val engine=remember{PokerEngine()}; val bets=listOf(10,20,50,100,200); val tone=remember{ToneGenerator(AudioManager.STREAM_MUSIC,75)}
+ val engine=remember{PokerEngine()}; val bets=listOf(10,20,50,100,200); val tone=remember{ToneGenerator(AudioManager.STREAM_MUSIC,48)}
  DisposableEffect(Unit){onDispose{tone.release()}}
  var points by remember{mutableIntStateOf(1000)};var bet by remember{mutableIntStateOf(20)}
  var deck by remember{mutableStateOf(engine.newDeck())};var cards by remember{mutableStateOf(emptyList<Card>())};var held by remember{mutableStateOf(setOf<Int>())}
  var drawing by remember{mutableStateOf(false)};var win by remember{mutableIntStateOf(0)};var hand by remember{mutableStateOf(Hand.NONE)};var shuffling by remember{mutableStateOf(false)};var ladderLight by remember{mutableIntStateOf(-1)};var riskAvailable by remember{mutableStateOf(false)};var riskRunning by remember{mutableStateOf(false)}
  val amber=Color(0xFFFFB000);val scope=rememberCoroutineScope()
  suspend fun dealAnimated(newDeck:MutableList<Card>){
-  shuffling=true; cards=emptyList(); repeat(8){tone.startTone(ToneGenerator.TONE_PROP_BEEP,35);delay(45)}
-  var shown=emptyList<Card>(); repeat(5){i->shown=shown+newDeck[i];cards=shown;tone.startTone(ToneGenerator.TONE_PROP_ACK,45);delay(100)}
+  shuffling=true; cards=emptyList(); repeat(8){tone.startTone(ToneGenerator.TONE_CDMA_PIP,35);delay(45)}
+  var shown=emptyList<Card>(); repeat(5){i->shown=shown+newDeck[i];cards=shown;tone.startTone(ToneGenerator.TONE_CDMA_PIP,45);delay(100)}
   shuffling=false
  }
  Column(Modifier.fillMaxSize().background(Color(0xFF080808)).padding(8.dp),horizontalAlignment=Alignment.CenterHorizontally){
   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceEvenly){listOf("ROYAL FLUSH","STRAIGHT FLUSH","VIERLING","FULL HOUSE","FLUSH","STRAIGHT","DRILLING","ZWEI PAAR","EIN PAAR").forEach{label->Text(text=label,modifier=Modifier.border(1.dp,Color(0xFF684600)).padding(4.dp),color=if(label==handLabel(hand))Color.Yellow else amber,fontSize=9.sp,fontWeight=FontWeight.Bold)}}
   Row(Modifier.weight(1f).fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
-   Row(Modifier.weight(1f),horizontalArrangement=Arrangement.SpaceEvenly){repeat(5){i->CardSlot(cards.getOrNull(i),i in held,drawing&&!shuffling){held=if(i in held)held-i else held+i;tone.startTone(ToneGenerator.TONE_PROP_BEEP,55)}}}
+   Row(Modifier.weight(1f),horizontalArrangement=Arrangement.SpaceEvenly){repeat(5){i->CardSlot(cards.getOrNull(i),i in held,drawing&&!shuffling){held=if(i in held)held-i else held+i;tone.startTone(ToneGenerator.TONE_CDMA_PIP,55)}}}
    Column(Modifier.width(88.dp),horizontalAlignment=Alignment.CenterHorizontally){Text("RISIKO",color=Color.Red,fontSize=11.sp,fontWeight=FontWeight.Bold);listOf(5000,2000,1000,500,200,100,50,20,10,0).forEachIndexed{i,v->Row(Modifier.fillMaxWidth(),horizontalArrangement=if(i%2==0)Arrangement.Start else Arrangement.End){Text(text="$v",modifier=Modifier.width(55.dp).border(if(i==ladderLight)3.dp else 1.dp,if(i==ladderLight)Color.Yellow else Color(0xFF684600)).padding(horizontal=5.dp,vertical=2.dp),color=if(i==ladderLight)Color.Yellow else amber,fontSize=11.sp,fontWeight=if(i==ladderLight)FontWeight.Bold else FontWeight.Normal)}}}
   }
   Row(Modifier.fillMaxWidth().height(105.dp),horizontalArrangement=Arrangement.SpaceEvenly,verticalAlignment=Alignment.CenterVertically){
@@ -53,9 +53,9 @@ class MainActivity:ComponentActivity(){
       points-=bet;val nd=engine.newDeck();deck=nd;held=emptySet();win=0;hand=Hand.NONE;dealAnimated(nd);deck=nd.drop(5).toMutableList();drawing=true
      }else{
       val d=deck.toMutableList();var next=cards
-      for(i in 0..4)if(i !in held){delay(90);next=next.toMutableList().also{it[i]=d.removeAt(0)};cards=next;tone.startTone(ToneGenerator.TONE_PROP_ACK,50)}
+      for(i in 0..4)if(i !in held){delay(90);next=next.toMutableList().also{it[i]=d.removeAt(0)};cards=next;tone.startTone(ToneGenerator.TONE_CDMA_PIP,50)}
       deck=d;hand=engine.evaluate(next);win=bet*hand.multiplier;drawing=false;riskAvailable=win>0
-      tone.startTone(if(win>0)ToneGenerator.TONE_PROP_ACK else ToneGenerator.TONE_PROP_NACK,180)
+      tone.startTone(if(win>0)ToneGenerator.TONE_CDMA_PIP else ToneGenerator.TONE_CDMA_PIP,180)
      }
     }
    }
