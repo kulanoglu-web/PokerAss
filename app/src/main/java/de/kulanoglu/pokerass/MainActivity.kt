@@ -29,7 +29,7 @@ class MainActivity:ComponentActivity(){
  DisposableEffect(Unit){onDispose{tone.release()}}
  var points by remember{mutableIntStateOf(1000)};var bet by remember{mutableIntStateOf(20)}
  var deck by remember{mutableStateOf(engine.newDeck())};var cards by remember{mutableStateOf(emptyList<Card>())};var held by remember{mutableStateOf(setOf<Int>())}
- var drawing by remember{mutableStateOf(false)};var win by remember{mutableIntStateOf(0)};var hand by remember{mutableStateOf(Hand.NONE)};var shuffling by remember{mutableStateOf(false)};var ladderLight by remember{mutableIntStateOf(-1)}
+ var drawing by remember{mutableStateOf(false)};var win by remember{mutableIntStateOf(0)};var hand by remember{mutableStateOf(Hand.NONE)};var shuffling by remember{mutableStateOf(false)};var ladderLight by remember{mutableIntStateOf(-1)};var riskAvailable by remember{mutableStateOf(false)}
  val amber=Color(0xFFFFB000)
  suspend fun dealAnimated(newDeck:MutableList<Card>){
   shuffling=true; cards=emptyList(); repeat(8){tone.startTone(ToneGenerator.TONE_PROP_BEEP,35);delay(45)}
@@ -44,7 +44,7 @@ class MainActivity:ComponentActivity(){
   }
   Row(Modifier.fillMaxWidth().height(105.dp),horizontalArrangement=Arrangement.SpaceEvenly,verticalAlignment=Alignment.CenterVertically){
    Led("PUNKTE",points);Led("EINSATZ",bet);Led("GEWINN",win)
-   MachineButton("EINSATZ",Color.DarkGray,!drawing&&!shuffling){bet=bets[(bets.indexOf(bet)+1)%bets.size];tone.startTone(ToneGenerator.TONE_PROP_BEEP,70)}
+   MachineButton(if(riskAvailable)"NEHMEN" else "EINSATZ",Color.DarkGray,!drawing&&!shuffling){if(riskAvailable){points+=win;win=0;riskAvailable=false}else bet=bets[(bets.indexOf(bet)+1)%bets.size];tone.startTone(ToneGenerator.TONE_CDMA_PIP,45)}
    val scope=rememberCoroutineScope()
    MachineButton(if(drawing)"ZIEHEN" else "GEBEN",Color(0xFF9E1717),!shuffling){
     scope.launch{
