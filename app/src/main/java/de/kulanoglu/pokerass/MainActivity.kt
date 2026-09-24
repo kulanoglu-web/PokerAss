@@ -42,9 +42,9 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
   shuffling=false
  }
  Column(Modifier.fillMaxSize().background(Color(0xFF080808)).padding(horizontal=4.dp,vertical=2.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.SpaceBetween){
-  Column(Modifier.fillMaxWidth().padding(bottom=2.dp)){listOf(listOf("ROYAL FLUSH","STRAIGHT FLUSH","VIERLING"),listOf("FULL HOUSE","FLUSH","STRAIGHT"),listOf("DRILLING","ZWEI PAAR","EIN PAAR"),listOf("NIX")).forEach{r->Row(Modifier.fillMaxWidth()){r.forEach{label->Text(label,Modifier.weight(1f).padding(2.dp).border(1.dp,Color(0xFF684600)).padding(vertical=3.dp),if(label==handLabel(hand))Color.Yellow else amber,9.sp,fontWeight=FontWeight.Bold,textAlign=androidx.compose.ui.text.style.TextAlign.Center)}}}}
+  Column(Modifier.fillMaxWidth().padding(bottom=1.dp)){listOf(listOf("ROYAL FLUSH","STRAIGHT FLUSH","VIERLING","FULL HOUSE","FLUSH"),listOf("STRAIGHT","DRILLING","ZWEI PAAR","EIN PAAR","NIX")).forEach{r->Row(Modifier.fillMaxWidth()){r.forEach{label->Text(label,Modifier.weight(1f).padding(2.dp).border(1.dp,Color(0xFF684600)).padding(vertical=3.dp),if(label==handLabel(hand))Color.Yellow else amber,9.sp,fontWeight=FontWeight.Bold,textAlign=androidx.compose.ui.text.style.TextAlign.Center)}}}}
   Row(Modifier.weight(1f).fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
-   Row(Modifier.weight(1f),horizontalArrangement=Arrangement.SpaceEvenly){repeat(5){i->CardSlot(cards.getOrNull(i),i in held,drawing&&!shuffling){held=if(i in held)held-i else held+i;mechanicalSound(MechSound.BUTTON)}}}
+   Row(Modifier.weight(1f).padding(horizontal=2.dp),horizontalArrangement=Arrangement.spacedBy(3.dp,Alignment.CenterHorizontally)){repeat(5){i->CardSlot(cards.getOrNull(i),i in held,drawing&&!shuffling){held=if(i in held)held-i else held+i;mechanicalSound(MechSound.BUTTON)}}}
    Column(Modifier.width(64.dp),horizontalAlignment=Alignment.CenterHorizontally){Text("RISIKO",color=Color.Red,fontSize=11.sp,fontWeight=FontWeight.Bold);listOf(5000,2000,1000,500,200,100,50,20,10,0).forEachIndexed{i,v->Row(Modifier.fillMaxWidth(),horizontalArrangement=if(i%2==0)Arrangement.Start else Arrangement.End){Text("$v",Modifier.width(48.dp).border(if(i==ladderLight)3.dp else 1.dp,if(i==ladderLight)Color.Yellow else Color(0xFF684600)).padding(horizontal=3.dp,vertical=1.dp),if(i==ladderLight)Color.Yellow else amber,11.sp,fontWeight=if(i==ladderLight)FontWeight.Bold else FontWeight.Normal)}}}
   }
   Column(Modifier.fillMaxWidth().padding(top=2.dp)){Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceEvenly){Led("PUNKTE",points);Led("EINSATZ",bet);Led("GEWINN",win)};Row(Modifier.fillMaxWidth().height(70.dp),horizontalArrangement=Arrangement.SpaceEvenly,verticalAlignment=Alignment.CenterVertically){
@@ -59,17 +59,17 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
 @Composable private fun CardSlot(card:Card?,held:Boolean,enabled:Boolean,onHold:()->Unit){
  val red=card?.suit==Suit.HEARTS||card?.suit==Suit.DIAMONDS
  val ink=if(red)Color(0xFFB00020) else Color(0xFF111111)
- Column(Modifier.width(48.dp),horizontalAlignment=Alignment.CenterHorizontally){
-  Box(Modifier.fillMaxWidth().aspectRatio(0.67f).background(if(card==null)Color(0xFF173A24) else Color(0xFFF7F3E8),RoundedCornerShape(5.dp)).border(if(held)4.dp else 2.dp,if(held)Color(0xFFFFB000) else Color(0xFFB8B09D),RoundedCornerShape(5.dp)).clickable(enabled=enabled){onHold()}){
+ Column(Modifier.width(45.dp),horizontalAlignment=Alignment.CenterHorizontally){
+  Box(Modifier.fillMaxWidth().aspectRatio(0.54f).background(if(card==null)Color(0xFF173A24) else Color(0xFFF7F3E8),RoundedCornerShape(5.dp)).border(if(held)4.dp else 2.dp,if(held)Color(0xFFFFB000) else Color(0xFFB8B09D),RoundedCornerShape(5.dp)).clickable(enabled=enabled){onHold()}){
    if(card==null) Text("POKER\nASS",Modifier.align(Alignment.Center),color=Color(0xFFFFB000),fontSize=15.sp,fontWeight=FontWeight.Bold)
    else{
     Column(Modifier.align(Alignment.TopStart).padding(4.dp),horizontalAlignment=Alignment.CenterHorizontally){Text(card.rank.label,color=ink,fontSize=13.sp,fontWeight=FontWeight.Bold);Text(card.suit.symbol,color=ink,fontSize=12.sp)}
-    Text(card.suit.symbol,Modifier.align(Alignment.Center),color=ink,fontSize=34.sp,fontWeight=FontWeight.Bold)
+    Text(card.suit.symbol,Modifier.align(Alignment.Center),color=ink,fontSize=29.sp,fontWeight=FontWeight.Bold)
     Column(Modifier.align(Alignment.BottomEnd).padding(4.dp),horizontalAlignment=Alignment.CenterHorizontally){Text(card.suit.symbol,color=ink,fontSize=12.sp);Text(card.rank.label,color=ink,fontSize=13.sp,fontWeight=FontWeight.Bold)}
    }
   }
   Spacer(Modifier.height(3.dp))
-  Box(Modifier.fillMaxWidth().height(18.dp).background(if(held)Color(0xFFFFB000) else Color(0xFF282828),RoundedCornerShape(4.dp)).clickable(enabled=enabled){onHold()},contentAlignment=Alignment.Center){Text(if(held)"HALTEN" else "HALT",color=if(held)Color.Black else Color.LightGray,fontSize=9.sp,fontWeight=FontWeight.Bold)}
+  Box(Modifier.fillMaxWidth().height(24.dp).background(if(held)Color(0xFFFFB000) else Color(0xFF282828),RoundedCornerShape(4.dp)).clickable(enabled=enabled){onHold()},contentAlignment=Alignment.Center){Text(if(held)"HALTEN" else "HALT",color=if(held)Color.Black else Color.LightGray,fontSize=9.sp,fontWeight=FontWeight.Bold)}
  }
 }
 @Composable private fun Led(label:String,value:Int){Column(horizontalAlignment=Alignment.CenterHorizontally){Text(label,color=Color(0xFFFFB000),fontSize=9.sp);Text(value.toString().padStart(5,'0'),color=Color(0xFFFF3D00),fontSize=21.sp,fontWeight=FontWeight.Bold)}}
