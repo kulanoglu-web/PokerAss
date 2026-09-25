@@ -38,33 +38,33 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
   shuffling=true;winPulse=-1;dealCount++;status="MISCHEN";statusPulse++;lampPhase=0
   val preview=engine.newDeck()
   mechanicalSound(MechSound.SHUFFLE)
-  repeat(24){frame->
+  repeat(28){frame->
    cards=List(5){i->
     val stagger=(frame-(i*2)).coerceAtLeast(0)
     preview[(stagger*(i+3)+i*7)%preview.size]
    }
    lampPhase=frame
-   if(frame==8||frame==16)mechanicalSound(MechSound.SHUFFLE)
-   delay(44L+frame*3)
+   if(frame==7||frame==14||frame==21)mechanicalSound(MechSound.SHUFFLE)
+   delay(50L+frame*3)
   }
   var settled=cards
   repeat(5){i->
    settled=settled.toMutableList().also{it[i]=nd[i]};cards=settled;lampPhase=16+i
-   mechanicalSound(MechSound.CARD);delay(145L+i*48)
+   mechanicalSound(MechSound.CARD);delay(165L+i*55)
   }
   shuffling=false;lampPhase=0;winPulse=-1;status="HALTEN / ZIEHEN";statusPulse++;flash=true;delay(90);flash=false
  }
  Column(Modifier.fillMaxSize().background(Color(0xFF020101)).padding(horizontal=3.dp,vertical=2.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.SpaceBetween){
   Column(Modifier.fillMaxWidth().padding(bottom=2.dp)){listOf(listOf("ROYAL FLUSH","STRAIGHT FLUSH","VIERLING","FULL HOUSE","FLUSH"),listOf("STRAIGHT","DRILLING","ZWEI PAAR","EIN PAAR","NIX")).forEach{r->Row(Modifier.fillMaxWidth()){r.forEach{label->Text(label,Modifier.weight(1f).padding(2.dp).border(1.dp,if(flash||lampPhase%4==0&&shuffling)hotAmber else Color(0xFF765000)).padding(vertical=4.dp),if(label==handLabel(hand))hotAmber else amber,8.sp,fontWeight=FontWeight.Bold,textAlign=androidx.compose.ui.text.style.TextAlign.Center)}}}}
   Text(status,color=if(flash)Color(0xFFFFE46B) else amber,fontSize=10.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.height(1.dp));Row(Modifier.weight(1f).fillMaxWidth().border(2.dp,if(flash)amber else Color(0xFF79500C),RoundedCornerShape(5.dp)).padding(4.dp),verticalAlignment=Alignment.Top){
-   Column(Modifier.weight(1f).padding(top=12.dp),horizontalAlignment=Alignment.CenterHorizontally){Text(if(riskAvailable||riskRunning)"AUSSPIELUNG  ×2 / 0" else "AUSSPIELUNG",color=if(riskAvailable||riskRunning)hotAmber else dimAmber,fontSize=11.sp,fontWeight=FontWeight.Bold);Column(Modifier.fillMaxWidth().padding(vertical=6.dp)){val snakeRows=listOf(listOf(8,7,6),listOf(3,4,5),listOf(2,1,0));snakeRows.forEachIndexed{rowIndex,row->Row(Modifier.fillMaxWidth(),horizontalArrangement=if(rowIndex%2==0)Arrangement.End else Arrangement.Start){row.forEach{step->Box(Modifier.padding(horizontal=4.dp,vertical=2.dp).size(if(step==winPulse)18.dp else 14.dp).background(if(step==winPulse||riskRunning&&lampPhase%9==step)hotAmber else Color(0xFF3A1705),RoundedCornerShape(50)).border(1.dp,amber,RoundedCornerShape(50)))}}}};Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(2.dp,Alignment.CenterHorizontally)){repeat(5){i->CardSlot(cards.getOrNull(i),i in held,drawing&&!shuffling){held=if(i in held)held-i else held+i;mechanicalSound(MechSound.BUTTON)}}}}
+   Column(Modifier.weight(1f).padding(top=12.dp),horizontalAlignment=Alignment.CenterHorizontally){Text(if(riskAvailable||riskRunning)"AUSSPIELUNG   ×2  •  0" else "AUSSPIELUNG",color=if(riskAvailable||riskRunning)hotAmber else dimAmber,fontSize=11.sp,fontWeight=FontWeight.Bold);Column(Modifier.fillMaxWidth().padding(vertical=6.dp)){val snakeRows=listOf(listOf(8,7,6),listOf(3,4,5),listOf(2,1,0));snakeRows.forEachIndexed{rowIndex,row->Row(Modifier.fillMaxWidth(),horizontalArrangement=if(rowIndex%2==0)Arrangement.End else Arrangement.Start){row.forEach{step->Box(Modifier.padding(horizontal=6.dp,vertical=4.dp).size(if(step==winPulse)18.dp else 14.dp).background(if(step==winPulse||riskRunning&&lampPhase%9==step)hotAmber else Color(0xFF3A1705),RoundedCornerShape(50)).border(1.dp,amber,RoundedCornerShape(50)))}}}};Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(2.dp,Alignment.CenterHorizontally)){repeat(5){i->CardSlot(cards.getOrNull(i),i in held,drawing&&!shuffling){held=if(i in held)held-i else held+i;mechanicalSound(MechSound.BUTTON)}}}}
    Column(Modifier.width(73.dp).padding(top=10.dp),horizontalAlignment=Alignment.CenterHorizontally){
  Text(if(riskAvailable||riskRunning)"×2 / 0" else "RISIKO",color=Color(0xFFFF7D25),fontSize=11.sp,fontWeight=FontWeight.Bold)
  val rv=listOf(5000,2000,1000,500,200,100,50,20,10,0)
  rv.forEachIndexed{i,v->
   val left=i%4==0||i%4==3
   Row(Modifier.fillMaxWidth(),horizontalArrangement=if(left)Arrangement.Start else Arrangement.End){
-   Box(Modifier.width(56.dp).height(28.dp).background(if(i==ladderLight)Color(0xFFAD3B00) else Color(0xFF0B0702),RoundedCornerShape(12.dp)).border(if(i==ladderLight)3.dp else 1.5.dp,if(i==ladderLight)Color.Yellow else Color(0xFFC98619),RoundedCornerShape(14.dp)),contentAlignment=Alignment.Center){
+   Box(Modifier.width(56.dp).height(30.dp).background(if(i==ladderLight)Color(0xFFAD3B00) else Color(0xFF0B0702),RoundedCornerShape(12.dp)).border(if(i==ladderLight)3.dp else 1.5.dp,if(i==ladderLight)Color.Yellow else Color(0xFFC98619),RoundedCornerShape(14.dp)),contentAlignment=Alignment.Center){
     Text(if(riskAvailable||riskRunning&&i==ladderLight) (if(i%2==0)"×2" else "0") else "$v",color=if(i==ladderLight)Color.Yellow else amber,fontSize=10.sp,fontWeight=FontWeight.Bold)
    }
   }
@@ -76,15 +76,15 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
    MachineButton(if(riskRunning)"STOP" else "AUSSPIELUNG",Color(0xFFBC1D1D),riskAvailable||riskRunning){
     if(riskRunning){stopRequested=true;status="STOP";mechanicalSound(MechSound.BUTTON)}
     else scope.launch{
-     riskRunning=true;stopRequested=false;status="AUSSPIELUNG - STOP";flash=true;lampPhase=1
+     riskRunning=true;stopRequested=false;status="AUSSPIELUNG LÄUFT - STOP";flash=true;lampPhase=1
      var p=8
-     while(!stopRequested){p=(p+1)%9;ladderLight=9-(p.coerceAtMost(8));lampPhase=p;mechanicalSound(MechSound.RELAY);delay(105)}
-     delay(180)
+     while(!stopRequested){p=(p+1)%9;ladderLight=9-(p.coerceAtMost(8));lampPhase=p;mechanicalSound(MechSound.RELAY);delay(125)}
+     delay(260)
      val doubled=(p%2==0) // visible alternating snake fields: ×2 / 0
      if(doubled){
-      win*=2;lastWin=win;riskAvailable=true;status="DOPPELT  $win  - NEHMEN ODER WEITER";ladderLight=(9-(kotlin.math.log2((win.coerceAtLeast(10)/10).toDouble()).toInt())).coerceIn(0,9);mechanicalSound(MechSound.WIN)
+      win*=2;lastWin=win;riskAvailable=true;status="DOPPELT: $win - NEHMEN / WEITER";ladderLight=(9-(kotlin.math.log2((win.coerceAtLeast(10)/10).toDouble()).toInt())).coerceIn(0,9);mechanicalSound(MechSound.WIN)
      }else{
-      win=0;lastWin=0;riskAvailable=false;status="0 - AUSSPIELUNG VERLOREN";ladderLight=9;mechanicalSound(MechSound.BUTTON)
+      win=0;lastWin=0;riskAvailable=false;status="0 - VERLOREN";ladderLight=9;mechanicalSound(MechSound.BUTTON)
      }
      riskRunning=false;stopRequested=false;flash=false;lampPhase=0
     }
@@ -98,12 +98,12 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
 @Composable private fun CardSlot(card:Card?,held:Boolean,enabled:Boolean,onHold:()->Unit){
  val red=card?.suit==Suit.HEARTS||card?.suit==Suit.DIAMONDS
  val ink=if(red)Color(0xFFB5122B) else Color(0xFF111111)
- Column(Modifier.width(51.dp),horizontalAlignment=Alignment.CenterHorizontally){
-  Box(Modifier.fillMaxWidth().aspectRatio(0.52f).background(if(card==null)Color(0xFF173A24) else Color(0xFFFCF2DE),RoundedCornerShape(3.dp)).border(if(held)4.dp else 2.dp,if(held)Color(0xFFFFB000) else Color(0xFFAF996F),RoundedCornerShape(3.dp)).clickable(enabled=enabled){onHold()}){
+ Column(Modifier.width(54.dp),horizontalAlignment=Alignment.CenterHorizontally){
+  Box(Modifier.fillMaxWidth().aspectRatio(0.50f).background(if(card==null)Color(0xFF173A24) else Color(0xFFFCF2DE),RoundedCornerShape(3.dp)).border(if(held)4.dp else 2.dp,if(held)Color(0xFFFFB000) else Color(0xFFAF996F),RoundedCornerShape(3.dp)).clickable(enabled=enabled){onHold()}){
    if(card==null) Text("♠\n♥\n♦\n♣",Modifier.align(Alignment.Center),color=Color(0xFFFFB000),fontSize=17.sp,fontWeight=FontWeight.Bold)
    else{
     Column(Modifier.align(Alignment.TopStart).padding(4.dp),horizontalAlignment=Alignment.CenterHorizontally){Text(card.rank.label,color=ink,fontSize=13.sp,fontWeight=FontWeight.Bold);Text(card.suit.symbol,color=ink,fontSize=12.sp)}
-    Text("${card.rank.label}\n${card.suit.symbol}",Modifier.align(Alignment.Center),color=ink,fontSize=25.sp,fontWeight=FontWeight.Bold,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+    Text("${card.rank.label}\n${card.suit.symbol}",Modifier.align(Alignment.Center),color=ink,fontSize=27.sp,fontWeight=FontWeight.Bold,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
     Column(Modifier.align(Alignment.BottomEnd).padding(4.dp),horizontalAlignment=Alignment.CenterHorizontally){Text(card.suit.symbol,color=ink,fontSize=12.sp);Text(card.rank.label,color=ink,fontSize=13.sp,fontWeight=FontWeight.Bold)}
    }
   }
