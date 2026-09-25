@@ -39,15 +39,18 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
   val preview=engine.newDeck()
   mechanicalSound(MechSound.SHUFFLE)
   repeat(24){frame->
-   cards=List(5){i->preview[(frame*(i+3)+i*7)%preview.size]}
+   cards=List(5){i->
+    val stagger=(frame-(i*2)).coerceAtLeast(0)
+    preview[(stagger*(i+3)+i*7)%preview.size]
+   }
    lampPhase=frame
    if(frame==8||frame==16)mechanicalSound(MechSound.SHUFFLE)
-   delay(38L+frame*2)
+   delay(44L+frame*3)
   }
   var settled=cards
   repeat(5){i->
    settled=settled.toMutableList().also{it[i]=nd[i]};cards=settled;lampPhase=16+i
-   mechanicalSound(MechSound.CARD);delay(115L+i*38)
+   mechanicalSound(MechSound.CARD);delay(145L+i*48)
   }
   shuffling=false;lampPhase=0;winPulse=-1;status="HALTEN / ZIEHEN";statusPulse++;flash=true;delay(90);flash=false
  }
@@ -62,7 +65,7 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
   val left=i%4==0||i%4==3
   Row(Modifier.fillMaxWidth(),horizontalArrangement=if(left)Arrangement.Start else Arrangement.End){
    Box(Modifier.width(56.dp).height(28.dp).background(if(i==ladderLight)Color(0xFFAD3B00) else Color(0xFF0B0702),RoundedCornerShape(12.dp)).border(if(i==ladderLight)3.dp else 1.5.dp,if(i==ladderLight)Color.Yellow else Color(0xFFC98619),RoundedCornerShape(14.dp)),contentAlignment=Alignment.Center){
-    Text(if(riskAvailable||riskRunning&&i==ladderLight) "●" else "$v",color=if(i==ladderLight)Color.Yellow else amber,fontSize=10.sp,fontWeight=FontWeight.Bold)
+    Text(if(riskAvailable||riskRunning&&i==ladderLight) (if(i%2==0)"×2" else "0") else "$v",color=if(i==ladderLight)Color.Yellow else amber,fontSize=10.sp,fontWeight=FontWeight.Bold)
    }
   }
  }
@@ -77,7 +80,7 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
      var p=8
      while(!stopRequested){p=(p+1)%9;ladderLight=9-(p.coerceAtMost(8));lampPhase=p;mechanicalSound(MechSound.RELAY);delay(105)}
      delay(180)
-     val doubled=Random.nextBoolean() // 50/50: double or lose current win
+     val doubled=(p%2==0) // visible alternating snake fields: ×2 / 0
      if(doubled){
       win*=2;lastWin=win;riskAvailable=true;status="DOPPELT  $win  - NEHMEN ODER WEITER";ladderLight=(9-(kotlin.math.log2((win.coerceAtLeast(10)/10).toDouble()).toInt())).coerceIn(0,9);mechanicalSound(MechSound.WIN)
      }else{
