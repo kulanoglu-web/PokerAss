@@ -4,9 +4,13 @@ enum class Rank(val value:Int,val label:String){TWO(2,"2"),THREE(3,"3"),FOUR(4,"
 data class Card(val rank:Rank,val suit:Suit)
 enum class Hand(val multiplier:Int){NONE(0),PAIR(1),TWO_PAIR(2),THREE(3),STRAIGHT(4),FLUSH(6),FULL_HOUSE(9),FOUR(25),STRAIGHT_FLUSH(50),ROYAL_FLUSH(250)}
 class PokerEngine{
- fun newDeck()=Suit.entries.flatMap{s->Rank.entries.map{r->Card(r,s)}}.shuffled().toMutableList()
+ private val fullDeck=Suit.entries.flatMap{s->Rank.entries.map{r->Card(r,s)}}
+
+ fun newDeck()=fullDeck.shuffled().toMutableList()
+ fun isValidDeck(cards:List<Card>)=cards.size==52&&cards.distinct().size==52
+ fun isValidHand(cards:List<Card>)=cards.size==5&&cards.distinct().size==5
  fun evaluate(cards:List<Card>):Hand{
-  require(cards.size==5)
+  require(isValidHand(cards))
   val v=cards.map{it.rank.value}.sorted(); val groups=v.groupingBy{it}.eachCount().values.sortedDescending()
   val flush=cards.map{it.suit}.distinct().size==1
   val straight=v.zipWithNext().all{(a,b)->b==a+1}||v==listOf(2,3,4,5,14)
