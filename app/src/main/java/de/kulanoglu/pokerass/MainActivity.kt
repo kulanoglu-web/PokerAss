@@ -32,10 +32,10 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
  var deck by remember{mutableStateOf(engine.newDeck())};var cards by remember{mutableStateOf(emptyList<Card>())};var held by remember{mutableStateOf(setOf<Int>())}
  var drawing by remember{mutableStateOf(false)};var win by remember{mutableIntStateOf(0)};var hand by remember{mutableStateOf(Hand.NONE)}
  var shuffling by remember{mutableStateOf(false)};var ladderLight by remember{mutableIntStateOf(-1)}
- var riskAvailable by remember{mutableStateOf(false)};var riskRunning by remember{mutableStateOf(false)};var stopRequested by remember{mutableStateOf(false)}
+ var riskAvailable by remember{mutableStateOf(false)};var riskRunning by remember{mutableStateOf(false)};var stopRequested by remember{mutableStateOf(false)};var status by remember{mutableStateOf("BEREIT")}
  val amber=Color(0xFFFFB000);val scope=rememberCoroutineScope()
  suspend fun dealAnimated(nd:MutableList<Card>){
-  shuffling=true
+  shuffling=true;status="MISCHEN"
   val preview=engine.newDeck()
   repeat(8){frame->
    cards=List(5){i->preview[(frame*5+i)%preview.size]}
@@ -47,11 +47,11 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
    settled=settled.toMutableList().also{it[i]=nd[i]};cards=settled
    mechanicalSound(MechSound.CARD);delay(105L+i*18)
   }
-  shuffling=false
+  shuffling=false;status="HALTEN / ZIEHEN"
  }
  Column(Modifier.fillMaxSize().background(Color(0xFF080808)).padding(horizontal=4.dp,vertical=2.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.SpaceBetween){
   Column(Modifier.fillMaxWidth().padding(bottom=1.dp)){listOf(listOf("ROYAL FLUSH","STRAIGHT FLUSH","VIERLING","FULL HOUSE","FLUSH"),listOf("STRAIGHT","DRILLING","ZWEI PAAR","EIN PAAR","NIX")).forEach{r->Row(Modifier.fillMaxWidth()){r.forEach{label->Text(label,Modifier.weight(1f).padding(2.dp).border(1.dp,Color(0xFF684600)).padding(vertical=3.dp),if(label==handLabel(hand))Color.Yellow else amber,9.sp,fontWeight=FontWeight.Bold,textAlign=androidx.compose.ui.text.style.TextAlign.Center)}}}}
-  Row(Modifier.weight(1f).fillMaxWidth().border(2.dp,Color(0xFF5A3A0A),RoundedCornerShape(6.dp)).padding(3.dp),verticalAlignment=Alignment.CenterVertically){
+  Text(status,color=amber,fontSize=10.sp,fontWeight=FontWeight.Bold);Row(Modifier.weight(1f).fillMaxWidth().border(2.dp,Color(0xFF5A3A0A),RoundedCornerShape(6.dp)).padding(3.dp),verticalAlignment=Alignment.CenterVertically){
    Row(Modifier.weight(1f).padding(horizontal=2.dp),horizontalArrangement=Arrangement.spacedBy(3.dp,Alignment.CenterHorizontally)){repeat(5){i->CardSlot(cards.getOrNull(i),i in held,drawing&&!shuffling){held=if(i in held)held-i else held+i;mechanicalSound(MechSound.BUTTON)}}}
    Column(Modifier.width(68.dp),horizontalAlignment=Alignment.CenterHorizontally){
  Text("RISIKO",color=Color(0xFFFF5722),fontSize=11.sp,fontWeight=FontWeight.Bold)
@@ -67,19 +67,19 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
 }
   }
   Column(Modifier.fillMaxWidth().padding(top=2.dp)){Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceEvenly){Led("PUNKTE",points);Led("EINSATZ",bet);Led("GEWINN",win)};Row(Modifier.fillMaxWidth().height(70.dp),horizontalArrangement=Arrangement.SpaceEvenly,verticalAlignment=Alignment.CenterVertically){
-   MachineButton(if(riskAvailable)"NEHMEN" else "EINSATZ",Color.DarkGray,!drawing&&!shuffling&&!riskRunning){if(riskAvailable){val target=points+win;riskAvailable=false;riskRunning=true;scope.launch{while(points<target){val step=((target-points)/18).coerceAtLeast(1);points=(points+step).coerceAtMost(target);mechanicalSound(MechSound.RELAY);delay(38)};win=0;ladderLight=-1;riskRunning=false}}else bet=bets[(bets.indexOf(bet)+1)%bets.size];mechanicalSound(MechSound.BUTTON)}
-   MachineButton(if(riskRunning)"STOP" else "RISIKO",Color(0xFF7A1111),riskAvailable||riskRunning){if(riskRunning){stopRequested=true;mechanicalSound(MechSound.BUTTON)}else{scope.launch{riskRunning=true;stopRequested=false;var p=9;while(!stopRequested){p=if(p==0)9 else p-1;ladderLight=p;mechanicalSound(MechSound.RELAY);delay(if(p%2==0)64 else 78)};var pause=92L;repeat(4){p=if(p==0)9 else p-1;ladderLight=p;mechanicalSound(MechSound.RELAY);delay(pause);pause+=55};val values=listOf(5000,2000,1000,500,200,100,50,20,10,0);win=values[p];riskAvailable=win>0;riskRunning=false;stopRequested=false}}}
-   MachineButton(if(drawing)"ZIEHEN" else "GEBEN",Color(0xFF9E1717),!shuffling){scope.launch{if(!drawing){if(points<bet){points=1000;win=0;hand=Hand.NONE};points-=bet;val nd=engine.newDeck();deck=nd;held=emptySet();win=0;hand=Hand.NONE;dealAnimated(nd);deck=nd.drop(5).toMutableList();drawing=true}else{val d=deck.toMutableList();var next=cards;for(i in 0..4)if(i !in held){delay(110);next=next.toMutableList().also{it[i]=d.removeAt(0)};cards=next;mechanicalSound(MechSound.CARD)};deck=d;hand=engine.evaluate(next);val targetWin=bet*hand.multiplier;win=0;drawing=false;if(targetWin>0){riskRunning=true;mechanicalSound(MechSound.WIN);var shown=0;while(shown<targetWin){val step=((targetWin-shown)/14).coerceAtLeast(1);shown=(shown+step).coerceAtMost(targetWin);win=shown;ladderLight=(9-(shown*9/targetWin)).coerceIn(0,9);mechanicalSound(MechSound.RELAY);delay(42)};riskRunning=false;riskAvailable=true}else{ladderLight=-1;mechanicalSound(MechSound.BUTTON)}}}}}
+   MachineButton(if(riskAvailable)"NEHMEN" else "EINSATZ",Color.DarkGray,!drawing&&!shuffling&&!riskRunning){if(riskAvailable){status="PUNKTE ZÄHLEN";val target=points+win;riskAvailable=false;riskRunning=true;scope.launch{while(points<target){val step=((target-points)/18).coerceAtLeast(1);points=(points+step).coerceAtMost(target);mechanicalSound(MechSound.RELAY);delay(38)};win=0;ladderLight=-1;riskRunning=false;status="BEREIT"}}else bet=bets[(bets.indexOf(bet)+1)%bets.size];mechanicalSound(MechSound.BUTTON)}
+   MachineButton(if(riskRunning)"STOP" else "RISIKO",Color(0xFF7A1111),riskAvailable||riskRunning){if(riskRunning){stopRequested=true;mechanicalSound(MechSound.BUTTON)}else{scope.launch{riskRunning=true;stopRequested=false;status="RISIKO - STOP";var p=9;while(!stopRequested){p=if(p==0)9 else p-1;ladderLight=p;mechanicalSound(MechSound.RELAY);delay(if(p%2==0)64 else 78)};var pause=92L;repeat(4){p=if(p==0)9 else p-1;ladderLight=p;mechanicalSound(MechSound.RELAY);delay(pause);pause+=55};val values=listOf(5000,2000,1000,500,200,100,50,20,10,0);win=values[p];riskAvailable=win>0;riskRunning=false;stopRequested=false;status=if(win>0)"NEHMEN ODER RISIKO" else "VERLOREN"}}}
+   MachineButton(if(drawing)"ZIEHEN" else "GEBEN",Color(0xFF9E1717),!shuffling){scope.launch{if(!drawing){if(points<bet){points=1000;win=0;hand=Hand.NONE};points-=bet;val nd=engine.newDeck();deck=nd;held=emptySet();win=0;hand=Hand.NONE;riskAvailable=false;ladderLight=-1;status="MISCHEN";dealAnimated(nd);deck=nd.drop(5).toMutableList();drawing=true}else{val d=deck.toMutableList();var next=cards;for(i in 0..4)if(i !in held){delay(110);next=next.toMutableList().also{it[i]=d.removeAt(0)};cards=next;mechanicalSound(MechSound.CARD)};deck=d;hand=engine.evaluate(next);val targetWin=bet*hand.multiplier;win=0;drawing=false;if(targetWin>0){status=handLabel(hand);riskRunning=true;mechanicalSound(MechSound.WIN);var shown=0;while(shown<targetWin){val step=((targetWin-shown)/14).coerceAtLeast(1);shown=(shown+step).coerceAtMost(targetWin);win=shown;ladderLight=(9-(shown*9/targetWin)).coerceIn(0,9);mechanicalSound(MechSound.RELAY);delay(42)};riskRunning=false;riskAvailable=true;status="NEHMEN ODER RISIKO"}else{ladderLight=-1;status="NIX";mechanicalSound(MechSound.BUTTON)}}}}}
   }}
  }
 }
 
-@Composable private fun MachineButton(label:String,color:Color,enabled:Boolean,onClick:()->Unit){Button(onClick=onClick,enabled=enabled,colors=ButtonDefaults.buttonColors(containerColor=color),modifier=Modifier.width(100.dp).height(60.dp),contentPadding=PaddingValues(4.dp)){Text(label,fontSize=11.sp,fontWeight=FontWeight.Bold)}}
+@Composable private fun MachineButton(label:String,color:Color,enabled:Boolean,onClick:()->Unit){Button(onClick=onClick,enabled=enabled,colors=ButtonDefaults.buttonColors(containerColor=color),modifier=Modifier.width(100.dp).height(60.dp).border(2.dp,Color(0xFF7C6B52),RoundedCornerShape(20.dp)),contentPadding=PaddingValues(4.dp)){Text(label,fontSize=11.sp,fontWeight=FontWeight.Bold)}}
 @Composable private fun CardSlot(card:Card?,held:Boolean,enabled:Boolean,onHold:()->Unit){
  val red=card?.suit==Suit.HEARTS||card?.suit==Suit.DIAMONDS
  val ink=if(red)Color(0xFFB00020) else Color(0xFF111111)
  Column(Modifier.width(45.dp),horizontalAlignment=Alignment.CenterHorizontally){
-  Box(Modifier.fillMaxWidth().aspectRatio(0.54f).background(if(card==null)Color(0xFF173A24) else Color(0xFFF2E9D2),RoundedCornerShape(3.dp)).border(if(held)4.dp else 2.dp,if(held)Color(0xFFFFB000) else Color(0xFF8C7A58),RoundedCornerShape(3.dp)).clickable(enabled=enabled){onHold()}){
+  Box(Modifier.fillMaxWidth().aspectRatio(0.54f).background(if(card==null)Color(0xFF173A24) else Color(0xFFF2E9D2),RoundedCornerShape(3.dp)).border(if(held)5.dp else 2.dp,if(held)Color(0xFFFFB000) else Color(0xFF8C7A58),RoundedCornerShape(3.dp)).clickable(enabled=enabled){onHold()}){
    if(card==null) Text("POKER\nASS",Modifier.align(Alignment.Center),color=Color(0xFFFFB000),fontSize=15.sp,fontWeight=FontWeight.Bold)
    else{
     Column(Modifier.align(Alignment.TopStart).padding(4.dp),horizontalAlignment=Alignment.CenterHorizontally){Text(card.rank.label,color=ink,fontSize=13.sp,fontWeight=FontWeight.Bold);Text(card.suit.symbol,color=ink,fontSize=12.sp)}
@@ -91,7 +91,7 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
   Box(Modifier.fillMaxWidth().height(24.dp).background(if(held)Color(0xFFFFC400) else Color(0xFF351010),RoundedCornerShape(4.dp)).clickable(enabled=enabled){onHold()},contentAlignment=Alignment.Center){Text(if(held)"HALTEN" else "HALT",color=if(held)Color.Black else Color.LightGray,fontSize=9.sp,fontWeight=FontWeight.Bold)}
  }
 }
-@Composable private fun Led(label:String,value:Int){Column(horizontalAlignment=Alignment.CenterHorizontally){Text(label,color=Color(0xFFFFB000),fontSize=9.sp);Text(value.toString().padStart(5,'0'),color=Color(0xFFFF3D00),fontSize=21.sp,fontWeight=FontWeight.Bold)}}
+@Composable private fun Led(label:String,value:Int){Column(Modifier.background(Color(0xFF170500),RoundedCornerShape(4.dp)).border(1.dp,Color(0xFF6A2400),RoundedCornerShape(4.dp)).padding(horizontal=9.dp,vertical=3.dp),horizontalAlignment=Alignment.CenterHorizontally){Text(label,color=Color(0xFFFFB000),fontSize=9.sp);Text(value.toString().padStart(5,'0'),color=Color(0xFFFF3D00),fontSize=21.sp,fontWeight=FontWeight.Bold)}}
 private fun handLabel(h:Hand)=when(h){Hand.ROYAL_FLUSH->"ROYAL FLUSH";Hand.STRAIGHT_FLUSH->"STRAIGHT FLUSH";Hand.FOUR->"VIERLING";Hand.FULL_HOUSE->"FULL HOUSE";Hand.FLUSH->"FLUSH";Hand.STRAIGHT->"STRAIGHT";Hand.THREE->"DRILLING";Hand.TWO_PAIR->"ZWEI PAAR";Hand.PAIR->"EIN PAAR";else->"NIX"}
 
 private enum class MechSound{SHUFFLE,CARD,BUTTON,RELAY,WIN}
