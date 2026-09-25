@@ -37,15 +37,17 @@ class MainActivity:ComponentActivity(){override fun onCreate(savedInstanceState:
  suspend fun dealAnimated(nd:MutableList<Card>){
   shuffling=true;winPulse=-1;dealCount++;status="MISCHEN";statusPulse++;lampPhase=0
   val preview=engine.newDeck()
-  repeat(18){frame->
-   cards=List(5){i->preview[(frame*4+i+frame)%preview.size]}
-   lampPhase=frame;if(frame%6==0)mechanicalSound(MechSound.SHUFFLE)
-   delay(29L+frame*4)
+  mechanicalSound(MechSound.SHUFFLE)
+  repeat(24){frame->
+   cards=List(5){i->preview[(frame*(i+3)+i*7)%preview.size]}
+   lampPhase=frame
+   if(frame==8||frame==16)mechanicalSound(MechSound.SHUFFLE)
+   delay(38L+frame*2)
   }
   var settled=cards
   repeat(5){i->
    settled=settled.toMutableList().also{it[i]=nd[i]};cards=settled;lampPhase=16+i
-   mechanicalSound(MechSound.CARD);delay(70L+i*29)
+   mechanicalSound(MechSound.CARD);delay(115L+i*38)
   }
   shuffling=false;lampPhase=0;winPulse=-1;status="HALTEN / ZIEHEN";statusPulse++;flash=true;delay(90);flash=false
  }
@@ -96,12 +98,12 @@ private fun handLabel(h:Hand)=when(h){Hand.ROYAL_FLUSH->"ROYAL FLUSH";Hand.STRAI
 private enum class MechSound{SHUFFLE,CARD,BUTTON,RELAY,WIN}
 private fun mechanicalSound(type:MechSound){
  val sr=16000
- val duration=when(type){MechSound.SHUFFLE->.38;MechSound.CARD->.075;MechSound.BUTTON->.045;MechSound.RELAY->.032;MechSound.WIN->.22}
+ val duration=when(type){MechSound.SHUFFLE->.52;MechSound.CARD->.075;MechSound.BUTTON->.045;MechSound.RELAY->.032;MechSound.WIN->.22}
  val n=(sr*duration).toInt();val data=ShortArray(n)
  for(i in 0 until n){val t=i.toDouble()/sr
-  val (decay,freq,noiseGain,toneGain)=when(type){MechSound.SHUFFLE->arrayOf(6.8,58.0,.46,.09);MechSound.CARD->arrayOf(48.0,96.0,.58,.12);MechSound.BUTTON->arrayOf(92.0,122.0,.62,.06);MechSound.RELAY->arrayOf(105.0,154.0,.52,.045);MechSound.WIN->arrayOf(11.0,104.0,.32,.14)}
+  val (decay,freq,noiseGain,toneGain)=when(type){MechSound.SHUFFLE->arrayOf(5.2,46.0,.58,.05);MechSound.CARD->arrayOf(48.0,96.0,.58,.12);MechSound.BUTTON->arrayOf(92.0,122.0,.62,.06);MechSound.RELAY->arrayOf(105.0,154.0,.52,.045);MechSound.WIN->arrayOf(11.0,104.0,.32,.14)}
   val env=exp(-decay*t);val noise=Random.nextDouble(-1.0,1.0);val click=if(t<.008)Random.nextDouble(-1.0,1.0)*(1.0-t/.008) else 0.0
-  val motor=if(type==MechSound.SHUFFLE)sin(2*PI*freq*t)+.22*sin(2*PI*(freq*2.15)*t)+.12*sin(2*PI*31*t) else sin(2*PI*freq*t)
+  val motor=if(type==MechSound.SHUFFLE)sin(2*PI*freq*t)+.22*sin(2*PI*(freq*2.15)*t)+.18*sin(2*PI*27*t)+.08*sin(2*PI*19*t) else sin(2*PI*freq*t)
   data[i]=((noise*noiseGain+motor*toneGain+click*.48)*env*Short.MAX_VALUE).toInt().coerceIn(-32768,32767).toShort()
  }
  val a=AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_GAME).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
