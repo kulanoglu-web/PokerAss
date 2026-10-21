@@ -1,10 +1,12 @@
 name: Build PokerAss APK
 on:
   push:
-    branches: [ main, video-reference-alignment ]
+    branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,48 +19,21 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - run: gradle assembleDebug
-      - name: Validate generated APK package
+      - name: Build APK
+        run: gradle assembleDebug
+      - name: Verify APK archive
+        shell: bash
         run: |
-          APK=app/build/outputs/apk/debug/app-debug.apk
+          set -euo pipefail
+          APK="app/build/outputs/apk/debug/app-debug.apk"
           test -s "$APK"
-          unzip -t "$APK" | tail -n 2
-          test -n "$(unzip -Z1 "$APK" | grep '^AndroidManifest.xml
-        run: cp app/build/outputs/apk/debug/app-debug.apk PokerAss.apk
-      - name: Publish direct APK download
+          unzip -t "$APK" >/dev/null
+          unzip -Z1 "$APK" | grep -Fx 'AndroidManifest.xml'
+          unzip -Z1 "$APK" | grep -Fx 'classes.dex'
+          cp "$APK" PokerAss.apk
+      - name: Publish direct APK file
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="video-build-${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" PokerAss.apk --title "PokerAss Android build ${GITHUB_RUN_NUMBER}" --notes "Android debug APK built from commit ${GITHUB_SHA}. For testing; not a signed production release." --target "$GITHUB_SHA" --prerelease
-      - uses: actions/upload-artifact@v4
-        with:
-          name: PokerAss-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-)"
-          test -n "$(unzip -Z1 "$APK" | grep '^classes.dex
-        run: cp app/build/outputs/apk/debug/app-debug.apk PokerAss.apk
-      - name: Publish direct APK download
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG="video-build-${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" PokerAss.apk --title "PokerAss Android build ${GITHUB_RUN_NUMBER}" --notes "Android debug APK built from commit ${GITHUB_SHA}. For testing; not a signed production release." --target "$GITHUB_SHA" --prerelease
-      - uses: actions/upload-artifact@v4
-        with:
-          name: PokerAss-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-)"
-          echo "APK archive and required entries verified"
-      - name: Rename installable APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk PokerAss.apk
-      - name: Publish direct APK download
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG="video-build-${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" PokerAss.apk --title "PokerAss Android build ${GITHUB_RUN_NUMBER}" --notes "Android debug APK built from commit ${GITHUB_SHA}. For testing; not a signed production release." --target "$GITHUB_SHA" --prerelease
-      - uses: actions/upload-artifact@v4
-        with:
-          name: PokerAss-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          TAG="pokerass-build-${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" PokerAss.apk --title "PokerAss build ${GITHUB_RUN_NUMBER}" --notes "Installable Android debug APK for testing." --target "$GITHUB_SHA" --prerelease
