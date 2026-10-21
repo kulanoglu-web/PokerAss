@@ -1,7 +1,7 @@
 name: Build PokerAss APK
 on:
   push:
-    branches: [ main ]
+    branches: [ main, video-reference-alignment ]
   workflow_dispatch:
 jobs:
   build:
